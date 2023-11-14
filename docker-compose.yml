@@ -1,0 +1,42 @@
+services:
+  sender:
+    build:
+      context: .
+      dockerfile: ./apps/sender/Dockerfile
+      target: development
+    command: npm run start:dev sender
+    env_file:
+      - ./apps/sender/.env
+    depends_on:
+      - receiver
+      - rabbitmq
+      - redis
+    ports:
+      - '3000:3000'
+
+  receiver:
+    build:
+      context: .
+      dockerfile: ./apps/receiver/Dockerfile
+      target: development
+    command: npm run start:dev receiver
+    env_file:
+      - ./apps/receiver/.env
+    depends_on:
+      - rabbitmq
+      - redis
+
+  rabbitmq:
+    image: rabbitmq
+    ports:
+      - 5672:5672
+
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
