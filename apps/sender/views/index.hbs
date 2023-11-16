@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Antara UI</title>
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/icon?family=Material+Icons"
+  />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: #303030;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      border: 1px solid #424242;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      background-color: #424242;
+    }
+
+    .form {
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form input {
+      padding: 12px;
+      margin: 8px;
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #616161;
+      border-radius: 4px;
+      background-color: #303030;
+      color: #ffffff;
+    }
+
+    .button:hover {
+      background-color: #1565c0;
+    }
+
+    .button {
+      background-color: #2196f3;
+      color: #fff;
+      padding: 12px;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+
+    .operations {
+      margin-top: 20px;
+    }
+
+    .operation {
+      border: 1px solid #ffffff;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h3>Add operation</h3>
+  <form class="form" id="form">
+    <input type="text" id="description" placeholder="Description of your operation" />
+    <input type="text" id="amount" placeholder="Amount of your operation" />
+  </form>
+  <button class="sync button">Handle Sync</button>
+  <button class="async button">Handle Async</button>
+  <button class="clear button">Clear Done Operations</button>
+</div>
+
+{{#if operations.length}}
+  <div class="container operations">
+    {{#each operations}}
+      <div id={{this.id}} class="operation">
+        <p>Description: {{ this.description }}</p>
+        <p>Amount of product: {{ this.amount }}</p>
+        <span class="status">Status: {{ this.status }}</span>
+        <button class="button" onclick="getStatus('{{ this.id }}')" data-id="{{ this.id }}">Update status</button>
+      </div>
+    {{/each}}
+  </div>
+{{/if}}
+
+<script>
+  async function post(url, body = {}) {
+    return await fetch("http://localhost:3000/" + url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body)
+    });
+  }
+
+  async function getStatus(id) {
+    const status = await post('status', { id })
+
+    const operation = document.getElementById(id);
+    const statusElement = operation.querySelector('.status');
+    statusElement.innerHTML = 'Status: ' + await status.json();
+  }
+
+  async function send(url) {
+    const amount = +this.document.querySelector("#amount").value;
+    const description = this.document.querySelector("#description").value;
+
+    if (!amount || amount <= 0) {
+      alert("Amount must be more than 0");
+    }
+
+    if (!description.length) {
+      alert("Description is required")
+    }
+
+    await post(url, { amount, description })
+    window.location.reload();
+  }
+
+  const syncButton = document.querySelector(".sync");
+  syncButton.addEventListener("click", async () => {
+    await send("sendSync");
+  });
+
+  const asyncButton = document.querySelector(".async");
+  asyncButton.addEventListener("click", async () => {
+    await send("sendAsync");
+  });
+
+  const clearButton = document.querySelector(".clear");
+  clearButton.addEventListener("click", async () => {
+    await post('clear')
+    window.location.reload();
+  })
+</script>
+</body>
+</html>
